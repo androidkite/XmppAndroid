@@ -1,8 +1,10 @@
 package com.example.xmppandroid;
 
-import java.io.IOException;
-import java.util.Collection;
-
+import android.app.Activity;
+import android.os.Bundle;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.EditText;
 import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.SmackException;
@@ -16,11 +18,8 @@ import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
 import org.jivesoftware.smackx.iqregister.AccountManager;
 
-import android.app.Activity;
-import android.os.Bundle;
-import android.view.View;
-import android.view.View.OnClickListener;
-import android.widget.EditText;
+import java.io.IOException;
+import java.util.Collection;
 
 public class MainActivity extends Activity implements OnClickListener
 {
@@ -91,7 +90,7 @@ public class MainActivity extends Activity implements OnClickListener
                 .setCompressionEnabled(true)
 //                .setHost("192.168.1.102")
                 .setHost("192.168.1.127")
-                .setServiceName("zhao-pc")
+                .setServiceName("zhao-PC")
                 .setPort(5222)
                 .build();
          connection = new XMPPTCPConnection(config);
@@ -103,8 +102,7 @@ public class MainActivity extends Activity implements OnClickListener
 //			connection.sendPacket(new Presence(Presence.Type.available));
 
 			Roster roster = Roster.getInstanceFor(connection);
-			
-			
+
 			/**
 		     * 获取账户所有属性信息
 		     * @return

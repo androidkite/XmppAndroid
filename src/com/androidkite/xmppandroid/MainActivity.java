@@ -1,18 +1,27 @@
 package com.androidkite.xmppandroid;
 
 import android.app.Activity;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.EditText;
-import org.jivesoftware.smack.*;
+import android.widget.Toast;
+import com.androidkite.xmppandroid.util.XmppUtil;
+import org.jivesoftware.smack.AbstractXMPPConnection;
+import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.SmackException.NotConnectedException;
+import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.chat.Chat;
+import org.jivesoftware.smack.chat.ChatManager;
+import org.jivesoftware.smack.chat.ChatManagerListener;
+import org.jivesoftware.smack.chat.ChatMessageListener;
+import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.roster.Roster;
 import org.jivesoftware.smack.roster.RosterEntry;
 import org.jivesoftware.smack.roster.RosterListener;
-import org.jivesoftware.smack.tcp.XMPPTCPConnection;
-import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
 import org.jivesoftware.smackx.iqregister.AccountManager;
 
 import java.io.IOException;
@@ -20,6 +29,9 @@ import java.util.Collection;
 
 public class MainActivity extends Activity implements OnClickListener
 {
+
+    private String TAG = getClass().getSimpleName();
+
 
 	
 	private AbstractXMPPConnection connection;
@@ -34,9 +46,25 @@ public class MainActivity extends Activity implements OnClickListener
 		setContentView(R.layout.activity_main);
 		findViewById(R.id.register).setOnClickListener(this);
 		findViewById(R.id.login).setOnClickListener(this);
+        findViewById(R.id.create_account).setOnClickListener(this);
+        findViewById(R.id.send).setOnClickListener(this);
 		userName = (EditText) findViewById(R.id.username);
 		password = (EditText) findViewById(R.id.password);
 	}
+
+
+    private android.os.Handler mHandler = new android.os.Handler()
+    {
+        @Override
+        public void handleMessage(android.os.Message msg) {
+            switch (msg.what){
+                case 1:
+                    Toast.makeText(getApplicationContext(),msg.obj+"",Toast.LENGTH_SHORT).show();
+                    break;
+            }
+            super.handleMessage(msg);
+        }
+    };
 
 	@Override
 	public void onClick(View v)
@@ -57,10 +85,77 @@ public class MainActivity extends Activity implements OnClickListener
 				}).start();
 				break;
 
+            case R.id.send:
+            {
+                EditText contentEd = (EditText) findViewById(R.id.content);
+                EditText toId = (EditText) findViewById(R.id.toid);
+                String c = contentEd.getText().toString();
+                String t = toId.getText().toString();
+
+                ChatManager chatmanager = ChatManager.getInstanceFor(connection);
+//                Chat mChat = chatmanager.createChat(t+"@192.168.1.127");
+                Chat mChat = chatmanager.createChat(t + "@zhao-pc/Smack");
+                try
+                {
+                    mChat.sendMessage(c);
+                }
+                catch (NotConnectedException e)
+                {
+                    e.printStackTrace();
+                }
+                break;
+            }
+
+
+            case R.id.create_account:
+            {
+
+                ChatManager chatmanager = ChatManager.getInstanceFor(connection);
+                chatmanager.addChatListener(new ChatManagerListener() {
+                    @Override
+                    public void chatCreated(Chat chat, boolean b) {
+                        chat.addMessageListener(new ChatMessageListener() {
+                            @Override
+                            public void processMessage(Chat chat, Message message) {
+                                String content=message.getBody();
+                                if (content!=null){
+                                    Log.e("TAG", "from:" + message.getFrom() + " to:" + message.getTo() + " message:" + message.getBody());
+                                    android.os.Message message1= android.os.Message.obtain();
+                                    message1.what=1;
+                                    message1.obj="收到消息：" + message.getBody()+" 来自:"+message.getFrom();
+                                    mHandler.sendMessage(message1);
+                                }
+                            }
+                        });
+
+                    }
+                });
+                break;
+            }
 			default:
 				break;
 		}
 	}
+
+
+
+
+
+
+    private class LoginAsyTask extends AsyncTask<Void,Void,Boolean>
+    {
+        @Override
+        protected Boolean doInBackground(Void... params)
+        {
+            return null;
+        }
+    }
+
+
+
+
+
+
 
 	private void doLogin()
 	{
@@ -79,64 +174,15 @@ public class MainActivity extends Activity implements OnClickListener
 		}
 		
 		
-        XMPPTCPConnectionConfiguration config = XMPPTCPConnectionConfiguration.builder()
-                .setDebuggerEnabled(true)
-                .setConnectTimeout(5*1000)
-                .setSendPresence(true)
-                .setSecurityMode(ConnectionConfiguration.SecurityMode.disabled)
-                .setCompressionEnabled(false)
-//                .setHost("192.168.1.102")
-                .setHost("192.168.1.127")
-                .setServiceName("zhao-PC")
-                .setPort(5222)
-                .build();
-         connection = new XMPPTCPConnection(config);
+//       connection = XmppUtil.newConnection("192.168.1.102",5222);
+         connection = XmppUtil.newConnection("192.168.1.127",5222);
         try
 		{
 			connection.connect();
 			connection.login(userName.getText().toString(), password.getText().toString());
 //			connection.sendStanza(new Presence(Presence.Type.available));
 //			connection.sendPacket(new Presence(Presence.Type.available));
-
-
-            connection.addConnectionListener(new ConnectionListener() {
-                @Override
-                public void connected(XMPPConnection connection)
-                {
-                }
-
-                @Override
-                public void authenticated(XMPPConnection connection, boolean resumed)
-                {
-                }
-
-                @Override
-                public void connectionClosed()
-                {
-                }
-
-                @Override
-                public void connectionClosedOnError(Exception e)
-                {
-
-                }
-
-                @Override
-                public void reconnectionSuccessful()
-                {
-                }
-
-                @Override
-                public void reconnectingIn(int seconds)
-                {
-                }
-
-                @Override
-                public void reconnectionFailed(Exception e)
-                {
-                }
-            });
-
+            connection.addConnectionListener(new XmppConnectionListener());
 
 			Roster roster = Roster.getInstanceFor(connection);
 
@@ -151,7 +197,6 @@ public class MainActivity extends Activity implements OnClickListener
 			  * 获取当前登录用户的所有好友信息
 			  * @return
 			  */
-			Roster.getInstanceFor(connection).getEntries();
 			Collection<RosterEntry> entries = roster.getEntries();
 			for (RosterEntry entry : entries) 
 			{
@@ -162,7 +207,7 @@ public class MainActivity extends Activity implements OnClickListener
 		     * @param user	账号
 		     * @return
 		     */
-			Roster.getInstanceFor(connection).getEntry("admin");
+            roster.getEntry("admin");
 			
 			/**
 		     * 添加好友
@@ -172,14 +217,7 @@ public class MainActivity extends Activity implements OnClickListener
 		     * @return
 		     */
 //			Roster.getInstanceFor(connection).createEntry(user, nickName, new String[]{groupName});
-			Roster.getInstanceFor(connection).createEntry("admin", "管理员", null);
-			
-			
-			
-		
-			
-			
-			
+            roster.createEntry("admin", "管理员", null);
 			roster.addRosterListener(new RosterListener()
 			{
 				

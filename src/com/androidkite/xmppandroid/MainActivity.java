@@ -1,15 +1,12 @@
-package com.example.xmppandroid;
+package com.androidkite.xmppandroid;
 
 import android.app.Activity;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.EditText;
-import org.jivesoftware.smack.AbstractXMPPConnection;
-import org.jivesoftware.smack.ConnectionConfiguration;
-import org.jivesoftware.smack.SmackException;
+import org.jivesoftware.smack.*;
 import org.jivesoftware.smack.SmackException.NotConnectedException;
-import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.roster.Roster;
 import org.jivesoftware.smack.roster.RosterEntry;
@@ -87,7 +84,7 @@ public class MainActivity extends Activity implements OnClickListener
                 .setConnectTimeout(5*1000)
                 .setSendPresence(true)
                 .setSecurityMode(ConnectionConfiguration.SecurityMode.disabled)
-                .setCompressionEnabled(true)
+                .setCompressionEnabled(false)
 //                .setHost("192.168.1.102")
                 .setHost("192.168.1.127")
                 .setServiceName("zhao-PC")
@@ -100,6 +97,46 @@ public class MainActivity extends Activity implements OnClickListener
 			connection.login(userName.getText().toString(), password.getText().toString());
 //			connection.sendStanza(new Presence(Presence.Type.available));
 //			connection.sendPacket(new Presence(Presence.Type.available));
+
+
+            connection.addConnectionListener(new ConnectionListener() {
+                @Override
+                public void connected(XMPPConnection connection)
+                {
+                }
+
+                @Override
+                public void authenticated(XMPPConnection connection, boolean resumed)
+                {
+                }
+
+                @Override
+                public void connectionClosed()
+                {
+                }
+
+                @Override
+                public void connectionClosedOnError(Exception e)
+                {
+
+                }
+
+                @Override
+                public void reconnectionSuccessful()
+                {
+                }
+
+                @Override
+                public void reconnectingIn(int seconds)
+                {
+                }
+
+                @Override
+                public void reconnectionFailed(Exception e)
+                {
+                }
+            });
+
 
 			Roster roster = Roster.getInstanceFor(connection);
 
